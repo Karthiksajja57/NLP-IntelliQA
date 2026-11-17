@@ -1,5 +1,7 @@
-// Served by FastAPI at /app -> same origin. If opened another way, talk to localhost:8000.
-const API = location.protocol.startsWith("http") && location.port === "8000" ? "" : "http://127.0.0.1:8000";
+// Auto-detect API base URL: same origin on Vercel/FastAPI (port 8000); fallback to localhost:8000 for other local dev servers.
+const API = (location.hostname === "localhost" || location.hostname === "127.0.0.1") && location.port && location.port !== "8000"
+  ? "http://127.0.0.1:8000"
+  : "";
 const $ = id => document.getElementById(id);
 let token = localStorage.getItem("iq_token");
 let user = null, docReady = false, lastNlp = null;

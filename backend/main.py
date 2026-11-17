@@ -23,11 +23,18 @@ from services.chunking import chunk_pages
 from services.qa_service import QAEngine
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-UPLOADS = os.path.join(BASE, "uploads")
+UPLOADS = "/tmp/uploads" if os.environ.get("VERCEL") else os.path.join(BASE, "uploads")
 FRONTEND = os.path.join(BASE, "..", "frontend")
-os.makedirs(UPLOADS, exist_ok=True)
-database.init_db()
-ensure_admin()
+try:
+    os.makedirs(UPLOADS, exist_ok=True)
+except Exception:
+    pass
+
+try:
+    database.init_db()
+    ensure_admin()
+except Exception as exc:
+    print(f"[IntelliQA] Database initialization deferred: {exc}")
 
 app = FastAPI(title="IntelliQA")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -153,9 +160,35 @@ async def upload(file: UploadFile = File(...), user: dict = Depends(current_user
         raise HTTPException(400, str(exc) or "The document has no usable words.")
     name = safe_filename(file.filename)
     engines[user["id"]] = {"engine": engine, "filename": name, "pages": total_pages, "chunks": len(chunks)}
-    database.documents.insert_one({"user_id": user["id"], "filename": name, "pages": total_pages, "chunks": len(chunks), "created_at": database.now_utc()})
+    database.documents.insert_one({
+        "user_id": user["id"],
+        "filename": name,
+        "pages": total_pages,
+        "chunks": len(chunks),
+        "chunk_data": chunks,
+        "created_at": database.now_utc()
+    })
     return {"success": True, "filename": name, "pages": total_pages, "chunks": len(chunks),
             "message": "Document processed successfully."}
+
+
+def _get_or_restore_engine(user_id):
+    doc = engines.get(user_id)
+    if not doc and database.documents is not None:
+        try:
+            last_doc = database.documents.find_one({"user_id": user_id}, sort=[("created_at", -1)])
+            if last_doc and "chunk_data" in last_doc and last_doc["chunk_data"]:
+                engine = QAEngine(last_doc["chunk_data"])
+                doc = {
+                    "engine": engine,
+                    "filename": last_doc.get("filename", "document"),
+                    "pages": last_doc.get("pages", 1),
+                    "chunks": last_doc.get("chunks", len(last_doc["chunk_data"]))
+                }
+                engines[user_id] = doc
+        except Exception as exc:
+            print(f"[IntelliQA] Could not restore QA engine: {exc}")
+    return doc
 
 
 @app.post("/ask")
@@ -163,7 +196,7 @@ def ask(body: QuestionBody, user: dict = Depends(current_user)):
     question = body.question.strip()
     if not question:
         raise HTTPException(400, "Please type a question.")
-    doc = engines.get(user["id"])
+    doc = _get_or_restore_engine(user["id"])
     if not doc:
         raise HTTPException(400, "Please upload a document first.")
     result = doc["engine"].ask(question)
@@ -173,10 +206,10 @@ def ask(body: QuestionBody, user: dict = Depends(current_user)):
 
 @app.get("/document-info")
 def document_info(user: dict = Depends(current_user)):
-    doc = engines.get(user["id"])
-    docs_count = database.documents.count_documents({"user_id": user["id"]})
-    q_count = database.questions.count_documents({"user_id": user["id"]})
-    sim_values = [x.get("similarity", 0) for x in database.questions.find({"user_id": user["id"], "similarity": {"$ne": None}}, {"similarity": 1})]
+    doc = _get_or_restore_engine(user["id"])
+    docs_count = database.documents.count_documents({"user_id": user["id"]}) if database.documents is not None else 0
+    q_count = database.questions.count_documents({"user_id": user["id"]}) if database.questions is not None else 0
+    sim_values = [x.get("similarity", 0) for x in database.questions.find({"user_id": user["id"], "similarity": {"$ne": None}}, {"similarity": 1})] if database.questions is not None else []
     avg = sum(sim_values) / len(sim_values) if sim_values else 0
     return {"uploaded": bool(doc), "filename": doc["filename"] if doc else None,
             "pages": doc["pages"] if doc else 0, "chunks": doc["chunks"] if doc else 0,
