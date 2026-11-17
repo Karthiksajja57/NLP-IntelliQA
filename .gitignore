@@ -1,0 +1,9 @@
+backend/.env
+backend/intelliqa.db
+backend/__pycache__/
+backend/services/__pycache__/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+.env
+backend/.env

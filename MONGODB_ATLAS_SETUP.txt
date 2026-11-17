@@ -1,0 +1,26 @@
+IntelliQA MongoDB Atlas Setup
+============================
+
+Your Atlas cluster:
+cluster0.f47nsh0.mongodb.net
+
+Database user:
+aravakalyanranjeeth_db_user
+
+1. Open backend/.env.example
+2. Copy it to backend/.env
+3. Replace <YOUR_DB_PASSWORD> with your MongoDB Atlas database-user password.
+4. Do NOT share that password or commit backend/.env to Git.
+5. In MongoDB Atlas, add your current IP address under Network Access.
+6. Install dependencies:
+   py -m pip install -r backend/requirements.txt
+7. Run:
+   cd backend
+   py -m uvicorn main:app --reload
+8. Open:
+   http://127.0.0.1:8000/app/
+
+Admin account is created automatically from the ADMIN_* values in backend/.env.
+Change the default admin password before real use.adminpassword
+
+If the database password contains special URL characters such as @, #, %, :, /, ?, or &, URL-encode it before placing it in MONGODB_URI.

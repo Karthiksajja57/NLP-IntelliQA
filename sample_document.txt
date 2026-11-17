@@ -1,0 +1,6 @@
+National Bird Is a Peacock.
+National Animal Is a Tiger.
+Capital of India is New Delhi.
+Founder of Microsoft is Bill Gates.
+The Taj Mahal is in Agra.
+Machine learning is a method that allows computers to learn patterns from data.

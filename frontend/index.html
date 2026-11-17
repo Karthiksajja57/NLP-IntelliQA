@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IntelliQA – Ask. Analyze. Understand.</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg style="display:none"><symbol id="logo" viewBox="0 0 40 40"><path d="M9 3h16l8 8v26H9z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M25 3v8h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><text x="21" y="29" text-anchor="middle" font-size="13" font-weight="800" fill="currentColor" font-family="Segoe UI,sans-serif">IQ</text></symbol></svg>
+
+<!-- ============ LOGIN / REGISTER ============ -->
+<div id="auth-view" class="auth">
+  <section class="auth-brand">
+    <div class="brand"><svg class="logo"><use href="#logo"/></svg><span>INTELLIQA</span></div>
+    <h1>Intelligent NLP Document Question Answering</h1>
+    <p class="muted">Ask. Analyze. Understand.</p>
+    <ol class="flow">
+      <li>DOCUMENT</li><li class="arrow">↓</li><li>NLP</li><li class="arrow">↓</li><li>KNOWLEDGE</li><li class="arrow">↓</li><li>ANSWER</li>
+    </ol>
+  </section>
+  <section class="auth-card card">
+    <form id="login-form" novalidate>
+      <h2>Welcome back</h2>
+      <label>Email<input id="l-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+      <label>Password<input id="l-pass" type="password" autocomplete="current-password" placeholder="Your password"></label>
+      <p class="form-error" id="l-error" role="alert"></p>
+      <button class="btn" type="submit">Login</button>
+      <p class="switch">Don't have an account? <a href="#" id="to-register">Register</a></p>
+    </form>
+    <form id="register-form" novalidate hidden>
+      <h2>Create your account</h2>
+      <label>Full Name<input id="r-name" type="text" autocomplete="name"></label>
+      <label>Email<input id="r-email" type="email" autocomplete="email"></label>
+      <label>Password<input id="r-pass" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label>
+      <label>Confirm Password<input id="r-pass2" type="password" autocomplete="new-password"></label>
+      <p class="form-error" id="r-error" role="alert"></p>
+      <button class="btn" type="submit">Register</button>
+      <p class="switch">Already have an account? <a href="#" id="to-login">Login</a></p>
+    </form>
+  </section>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="app-view" class="app" hidden>
+  <aside class="sidebar">
+    <div class="brand"><svg class="logo"><use href="#logo"/></svg><span>IntelliQA</span></div>
+    <nav id="nav">
+      <button data-view="dashboard" class="active">▦ Dashboard</button>
+      <button data-view="upload">⇪ Upload Document</button>
+      <button data-view="ask">? Ask Question</button>
+      <button data-view="nlp">⌬ NLP Analysis</button>
+      <button data-view="history">↺ History</button>
+      <button data-view="profile">☺ Profile</button>
+      <button data-view="admin" id="admin-nav" hidden>▣ Admin Panel</button>
+      <button id="logout" class="danger">⏻ Logout</button>
+    </nav>
+    <p class="muted tag">Ask. Analyze. Understand.</p>
+  </aside>
+
+  <main>
+    <header class="page-head">
+      <h1>Intelligent Document Question Answering</h1>
+      <p class="muted">Upload a document and ask questions using NLP-powered retrieval.</p>
+    </header>
+
+    <section id="view-dashboard" class="view">
+      <div class="cards">
+        <div class="stat card"><label>Documents Processed</label><b id="c-docs">0</b></div>
+        <div class="stat card"><label>Questions Asked</label><b id="c-q">0</b></div>
+        <div class="stat card"><label>Average Similarity</label><b id="c-sim">0%</b></div>
+        <div class="stat card"><label>Current Document</label><b id="c-doc" class="small">None</b></div>
+      </div>
+      <div class="card">
+        <h3>Get started</h3>
+        <p class="muted">1. Upload a PDF or TXT knowledge document. 2. Ask a question. 3. Inspect every NLP stage that produced the answer.</p>
+        <button class="btn go" data-go="upload">Upload Knowledge Document</button>
+      </div>
+    </section>
+
+    <section id="view-upload" class="view" hidden>
+      <div class="card">
+        <h3>Upload Knowledge Document</h3>
+        <div id="drop" class="drop" tabindex="0">
+          <svg class="logo big"><use href="#logo"/></svg>
+          <strong>Drag &amp; drop your file here</strong><span class="muted">or</span>
+          <button id="choose" class="btn secondary" type="button">Choose File</button>
+          <small class="muted">PDF / TXT supported · max 10 MB</small>
+          <input id="file" type="file" accept=".pdf,.txt" hidden>
+        </div>
+        <div id="progress" class="progress" hidden><div></div></div>
+        <div id="result" class="result" hidden>
+          <p><strong id="r-file"></strong></p>
+          <p class="ok">✓ Successfully processed</p>
+          <p>Pages: <b id="r-pages"></b> &nbsp; Text Chunks: <b id="r-chunks"></b></p>
+          <button class="btn go" data-go="ask">Ask Questions</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-ask" class="view" hidden>
+      <div class="card">
+        <h3>Ask Your Document</h3>
+        <div class="askrow">
+          <input id="q" type="text" placeholder="What is National Bird?" aria-label="Question">
+          <button id="askBtn" class="btn">Ask Question</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div id="loading" class="loading" hidden><i></i>Analyzing your question...</div>
+        <div id="answer" class="answer" hidden>
+          <label>Answer</label>
+          <div class="big-answer" id="a-text"></div>
+          <div class="meta"><span>Similarity <b id="a-sim"></b></span><span id="a-page-wrap">Page <b id="a-page"></b></span></div>
+          <div id="source" class="source"><label>Source</label><blockquote id="src-text"></blockquote></div>
+        </div>
+      </div>
+      <div class="card" id="nlp-inline-card" hidden><h3>NLP Processing</h3><div id="nlp-inline"></div></div>
+    </section>
+
+    <section id="view-nlp" class="view" hidden>
+      <div class="card">
+        <h3>NLP Analysis</h3>
+        <div class="terms">
+          <div><h4>Preprocessing</h4><p>Lowercase → remove punctuation → tokenize → remove stop-words.</p></div>
+          <div><h4>TF-IDF</h4><p>Turns the question and every passage into weighted word vectors.</p></div>
+          <div><h4>Cosine Similarity</h4><p>Scores each passage; the best sentence is selected.</p></div>
+          <div><h4>Answer Extraction</h4><p>Pattern rules pull out the exact answer (e.g. “Peacock”).</p></div>
+        </div>
+      </div>
+      <div class="card"><h3>Latest question</h3><div id="nlp-page"><p class="muted">Ask a question to see the NLP stages here.</p></div></div>
+    </section>
+
+    <section id="view-history" class="view" hidden>
+      <div class="card"><h3>Question History</h3>
+        <div class="table-wrap"><table><thead><tr><th>Question</th><th>Answer</th><th>Similarity</th><th>Date / time</th></tr></thead><tbody id="hist"></tbody></table></div>
+        <p id="hist-empty" class="muted" hidden>No questions yet.</p></div>
+    </section>
+
+
+    <section id="view-admin" class="view" hidden>
+      <div class="admin-hero card">
+        <div><span class="eyebrow">ADMIN CONSOLE</span><h2>IntelliQA Control Center</h2><p class="muted">Monitor registered users, uploaded documents, and question activity.</p></div>
+        <span class="admin-badge">Administrator</span>
+      </div>
+      <div class="cards">
+        <div class="stat card"><label>Total Users</label><b id="admin-users">0</b></div>
+        <div class="stat card"><label>Documents</label><b id="admin-docs">0</b></div>
+        <div class="stat card"><label>Questions</label><b id="admin-questions">0</b></div>
+        <div class="stat card"><label>Admins</label><b id="admin-admins">0</b></div>
+      </div>
+      <div class="card"><div class="section-head"><h3>Registered Users</h3><button class="btn secondary" id="admin-refresh">Refresh</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody id="admin-user-list"></tbody></table></div>
+      </div>
+    </section>
+
+    <section id="view-profile" class="view" hidden>
+      <div class="card"><h3>Profile</h3><p>Name: <b id="p-name"></b></p><p>Email: <b id="p-email"></b></p></div>
+    </section>
+  </main>
+</div>
+<div id="toasts"></div>
+<script src="script.js"></script>
+</body>
+</html>
