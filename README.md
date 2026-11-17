@@ -1,5 +1,7 @@
 # IntelliQA — NLP Document Question Answering System
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FKarthiksajja57%2FNLP-IntelliQA)
+
 IntelliQA lets users register/login, upload PDF/TXT documents, ask questions, inspect NLP processing, and view question history. MongoDB Atlas stores users, sessions, documents, and question history.
 
 ## 1. MongoDB Atlas setup
